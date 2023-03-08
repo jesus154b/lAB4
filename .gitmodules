@@ -1,0 +1,3 @@
+[submodule "labs-with-cva6"]
+	path = labs-with-cva6
+	url = git@github.com:sifferman/labs-with-cva6.git
