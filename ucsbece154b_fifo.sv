@@ -168,7 +168,7 @@ module ucsbece154b_fifo #(
         end
         else begin
             if(pop_en) begin 
-                $display("Popping %d, tail_ptr: %d.", FIFO_MEM[head_ptr_q], tail_ptr_q );
+                $display("Popping %d, head_ptr: %d.", FIFO_MEM[head_ptr_q], head_ptr_q );
                 $display("Num: %d.", data_count_q ); 
                 data_o <= FIFO_MEM[head_ptr_q];
                 
