@@ -22,7 +22,7 @@ module ucsbece154b_fifo #(
 );
 
 
-    logic [DATA_WIDTH-1:0] FIFO_MEM [NR_ENTRIES-1:0];
+    logic [DATA_WIDTH-1:0] MEM [NR_ENTRIES-1];
 
     logic [$clog2(NR_ENTRIES) - 1:0] head_ptr_d, head_ptr_q;
     logic [$clog2(NR_ENTRIES) - 1:0] tail_ptr_d, tail_ptr_q; 
@@ -39,8 +39,6 @@ module ucsbece154b_fifo #(
 
     assign valid_o = valid_q;
     assign full_o = full_q;
-
-    assign data_o = (valid_q) ? FIFO_MEM[head_ptr_q] : '0;
 
     always_comb begin
         //combinational nets
@@ -126,7 +124,7 @@ module ucsbece154b_fifo #(
 
     end
 
-    always_ff @(posedge clk_i or posedge rst_i) begin
+    always_ff @(posedge clk_i ) begin
 
         head_ptr_q <= head_ptr_d;
         tail_ptr_q <= tail_ptr_d;
@@ -139,7 +137,6 @@ module ucsbece154b_fifo #(
             head_ptr_q <= 0;
             tail_ptr_q <= 0;
             data_count_q <= 0;
-
             full_q <= 0;
             valid_q <= 0;
         end
@@ -147,19 +144,15 @@ module ucsbece154b_fifo #(
 
     end
 
-    always_ff @(posedge clk_i) begin
-        if(push_i && (!full_q || (full_q && pop_i))) begin
+    assign data_o = (valid_q) ? MEM[head_ptr_q] : '0;
+
+    always_ff @(posedge clk_i) begin : mem_write
+        if(push_en) begin // && (!full_q || (full_q && pop_i))
             $display("Pushing %d, tail_ptr: %d.", data_i, tail_ptr_q );
             $display("Num: %d.", data_count_q );
-            FIFO_MEM[tail_ptr_q] <= data_i;
+            MEM[tail_ptr_q] <= data_i;
 
         end
-        // if(pop_i) begin
-        //     $display("Popping %d, head_ptr: %d.", FIFO_MEM[head_ptr_q], head_ptr_q );
-        //     $display("Num: %d.", data_count_q );
-        //     data_o <= FIFO_MEM[head_ptr_q];
-        // end
-        // data_o <= out;
     end
 
 
