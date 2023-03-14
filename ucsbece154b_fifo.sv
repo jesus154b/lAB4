@@ -35,7 +35,7 @@ module ucsbece154b_fifo #(
 
     // Write and Read Enables internal
     assign push_en = push_i && (!full_q || (full_q && pop_i));
-    assign pop_en = pop_i && (valid_q || (!valid_q && push_i));
+    assign pop_en = pop_i && valid_q; // || (!valid_q && push_i));
 
     // assing full = (data_count_d == (NR_ENTRIES - 1));
     // assing valid = (data_count_d == (0));
