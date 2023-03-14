@@ -32,7 +32,7 @@ module ucsbece154b_fifo #(
     logic full_d, full_q;        // Full signal
     logic valid_d, valid_q;       // Empty signal
 
-    logic [DATA_WIDTH-1:0] out;
+    // logic [DATA_WIDTH-1:0] out;
 
     // Write and Read Enables internal
     assign push_en = push_i && (!full_q || (full_q && pop_i));
@@ -44,7 +44,7 @@ module ucsbece154b_fifo #(
     assign valid_o = valid_q;
     assign full_o = full_q;
 
-    assign data_o = out;
+    assign data_o = FIFO_MEM[head_ptr_q];
 
     // integer i = 0;
 
@@ -139,7 +139,6 @@ module ucsbece154b_fifo #(
         full_q <= full_d;
         valid_q <= valid_d;
         data_count_q <= data_count_d;
-        out <= '0;
 
         // handle reset/flush/disable
         if(rst_i) begin
@@ -149,27 +148,18 @@ module ucsbece154b_fifo #(
 
             full_q <= 0;
             valid_q <= 0;
-            // for (i = 0; i < NR_ENTRIES; i++) begin
-            //     FIFO_MEM[i] <= '0;
-            // end
-            // data_o <= 'x;
-        end
-        else begin
-            if(pop_i && valid_q) begin 
-                $display("Popping %d, head_ptr: %d.", FIFO_MEM[head_ptr_q], head_ptr_q );
-                $display("Num: %d.", data_count_q ); 
-                out <= FIFO_MEM[head_ptr_q];
-                
-            end               
-            if(push_i && (!full_q || (full_q && pop_i))) begin
-                $display("Pushing %d, tail_ptr: %d.", data_i, tail_ptr_q );
-                $display("Num: %d.", data_count_q );
-                FIFO_MEM[tail_ptr_q] <= data_i;
-
-            end
         end
 
 
+    end
+
+    always_ff @(posedge clk_i) begin
+        if(push_i && (!full_q || (full_q && pop_i))) begin
+            $display("Pushing %d, tail_ptr: %d.", data_i, tail_ptr_q );
+            $display("Num: %d.", data_count_q );
+            FIFO_MEM[tail_ptr_q] <= data_i;
+
+        end
     end
 
 
