@@ -26,7 +26,7 @@ module ucsbece154b_fifo #(
 
     logic [$clog2(NR_ENTRIES) - 1:0] head_ptr_d, head_ptr_q;
     logic [$clog2(NR_ENTRIES) - 1:0] tail_ptr_d, tail_ptr_q; 
-    logic [$clog2(NR_ENTRIES):0] data_count_d, data_count_q; 
+    logic [$clog2(NR_ENTRIES) :0] data_count_d, data_count_q; 
 
     logic push_en, pop_en;        // Write Enable signal generated iff FIFO is not full
     logic full_d, full_q;        // Full signal
@@ -40,7 +40,8 @@ module ucsbece154b_fifo #(
 
     assign valid_o = valid_q;
     assign full_o = full_q;
-    // assign data_o = out;
+    
+    assign data_o = RAM[head_ptr_q];
 
     integer i = 0;
 
@@ -53,12 +54,19 @@ module ucsbece154b_fifo #(
         data_count_d = data_count_q;
         full_d = full_q;
         valid_d = valid_q;
+        // out = 'x;
 
         // handle read port
         if(pop_en && !rst_i) begin
             if(head_ptr_d == (NR_ENTRIES - 1) ) begin
                 head_ptr_d = 0;
             end
+            else begin
+                head_ptr_d = head_ptr_d + 1;
+                
+            end
+
+            
         end
 
         // assign write port
@@ -66,6 +74,10 @@ module ucsbece154b_fifo #(
             if(tail_ptr_d == (NR_ENTRIES - 1) ) begin
                 tail_ptr_d = 0;
             end
+            else begin
+                tail_ptr_d = tail_ptr_d + 1;
+            end 
+
         end
         
         // Counter logic, if both read and write not change in amount of data
@@ -84,7 +96,7 @@ module ucsbece154b_fifo #(
         tail_ptr_q <= tail_ptr_d;
         full_q <= full_d;
         valid_q <= valid_d;
-
+        
         data_count_q <= data_count_d;
 
         // handle reset/flush/disable
@@ -97,15 +109,17 @@ module ucsbece154b_fifo #(
             for (i = 0; i < NR_ENTRIES; i++) begin
                 RAM[i] <= 0;
             end
-            data_o <= 0;
+            // out <= 0;
         end
         else begin
             if(pop_en) begin
                 $display("Popping, head_ptr: %d.\n", head_ptr_q );
-                data_o <= RAM[head_ptr_q];
-                head_ptr_q <= head_ptr_q + 1;
+                $display("Num: %d.\n", data_count_q );
+                // data_o <= RAM[head_ptr_q];
+
                 full_q <= 1'b0;
-                if(((tail_ptr_q - head_ptr_q) == 0) && (data_count_q == 0)) begin
+
+                if((data_count_q == 1)) begin
                     $display("Empty, head: %d, tail: %d.\n", head_ptr_q, tail_ptr_q);
                     valid_q <= 1'b0; // We are now empty
                 end
@@ -114,11 +128,12 @@ module ucsbece154b_fifo #(
             if(push_en) begin
                 $display("Pushing, tail_ptr: %d.\n", tail_ptr_q );
                 RAM[tail_ptr_q] <= data_i;
-                tail_ptr_q <= tail_ptr_q + 1;
+
                 valid_q <= 1'b1;
-                if((tail_ptr_q - head_ptr_q) == (NR_ENTRIES - 1)) begin
-                    // $display("Full.\n");
-                   full_q <= 1'b1;
+            
+                if((data_count_q == (NR_ENTRIES - 1))) begin
+                    $display("Full.\n");
+                    full_q <= 1'b1;
                 end
             end
         end
