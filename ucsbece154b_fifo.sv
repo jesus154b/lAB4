@@ -123,6 +123,7 @@ module ucsbece154b_fifo #(
         full_q <= full_d;
         valid_q <= valid_d;
         data_count_q <= data_count_d;
+        data_o <= 'x;
 
         // handle reset/flush/disable
         if(rst_i) begin
@@ -131,9 +132,9 @@ module ucsbece154b_fifo #(
             data_count_q <= 0;
             full_q <= 0;
             valid_q <= 0;
-            // for (i = 0; i < NR_ENTRIES; i++) begin
-            //     FIFO_MEM[i] <= 0;
-            // end
+            for (i = 0; i < NR_ENTRIES; i++) begin
+                FIFO_MEM[i] <= 0;
+            end
             data_o <= 'x;
         end
         else begin
