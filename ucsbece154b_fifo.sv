@@ -91,7 +91,7 @@ module ucsbece154b_fifo #(
             
             valid_d = 1'b1;
 
-            if((head_ptr_d == tail_ptr_d) && (data_count_d == (NR_ENTRIES - 1))) begin
+            if((head_ptr_d == tail_ptr_d) && (data_count_d == (NR_ENTRIES-1))) begin
                 $display("Full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 full_d = 1'b1;
             end
@@ -103,7 +103,7 @@ module ucsbece154b_fifo #(
         if (push_en && pop_en) begin
             // $display("Push+pop, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
 
-            if((head_ptr_d == tail_ptr_d) &&(data_count_d == (NR_ENTRIES - 1))) begin // Push after pop, when full
+            if((head_ptr_d == tail_ptr_d) &&(data_count_d == (NR_ENTRIES-1 ))) begin // Push after pop, when full
                 $display("Push after pop, when full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 full_d = 1'b1;
             end
