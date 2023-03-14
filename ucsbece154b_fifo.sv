@@ -46,7 +46,7 @@ module ucsbece154b_fifo #(
 
     assign data_o = out;
 
-    integer i = 0;
+    // integer i = 0;
 
     always_comb begin
         //combinational nets
@@ -149,9 +149,9 @@ module ucsbece154b_fifo #(
 
             full_q <= 0;
             valid_q <= 0;
-            for (i = 0; i < NR_ENTRIES; i++) begin
-                FIFO_MEM[i] <= '0;
-            end
+            // for (i = 0; i < NR_ENTRIES; i++) begin
+            //     FIFO_MEM[i] <= '0;
+            // end
             // data_o <= 'x;
         end
         else begin
