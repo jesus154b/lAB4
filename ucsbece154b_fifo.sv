@@ -59,7 +59,8 @@ module ucsbece154b_fifo #(
         // Counter logic, if both read and write not change in amount of data
         if( pop_en) begin // There was a read
 
-            if(head_ptr_d == (NR_ENTRIES - 1) || ( (data_count_d + 1'b1) == (NR_ENTRIES - 1)) ) begin
+            if(head_ptr_d >= (NR_ENTRIES - 1)  ) begin
+                $display("Head restart");
                 head_ptr_d = 0;
             end
             else begin 
@@ -81,7 +82,8 @@ module ucsbece154b_fifo #(
         
         end
         if(push_en) begin // There was a write
-            if(tail_ptr_d == (NR_ENTRIES - 1) || ( (data_count_d + 1'b1) == (NR_ENTRIES - 1)) ) begin
+            if(tail_ptr_d >= (NR_ENTRIES - 1)  ) begin
+                $display("Tail restart");
                 tail_ptr_d = 0;
             end
             else begin  
@@ -93,8 +95,8 @@ module ucsbece154b_fifo #(
             
             valid_d = 1'b1;
 
-            if(!(head_ptr_d - tail_ptr_d) && (data_count_d == (NR_ENTRIES - 1))) begin
-                // $display("Full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+            if(!(head_ptr_d - tail_ptr_d) && (data_count_d >= (NR_ENTRIES - 1))) begin
+                $display("Full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 full_d = 1'b1;
             end
             else begin 
@@ -105,8 +107,8 @@ module ucsbece154b_fifo #(
         else if (push_en && pop_en) begin
             // $display("Push+pop, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
 
-            if( !(head_ptr_d - tail_ptr_d) &&(data_count_d == (NR_ENTRIES - 1))) begin // Push after pop, when full
-                // $display("Push after pop, when full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+            if( !(head_ptr_d - tail_ptr_d) &&(data_count_d >= (NR_ENTRIES - 1))) begin // Push after pop, when full
+                $display("Push after pop, when full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 full_d = 1'b1;
             end
             else if( !(head_ptr_d - tail_ptr_d) &&(data_count_d == (0))) begin // Push after pop, when empty
