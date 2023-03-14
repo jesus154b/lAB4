@@ -31,7 +31,7 @@ module ucsbece154b_fifo #(
     logic push_en, pop_en;        // Write Enable signal generated iff FIFO is not full
     logic full_d, full_q;        // Full signal
     logic valid_d, valid_q;       // Empty signal
-    // logic [DATA_WIDTH-1:0] out;
+    logic [DATA_WIDTH-1:0] out;
 
     // Write and Read Enables internal
     assign push_en = push_i && (!full_q || (full_q && pop_i));
@@ -40,7 +40,7 @@ module ucsbece154b_fifo #(
     assign valid_o = valid_q;
     assign full_o = full_q;
 
-    // assign data_o = out;
+    assign data_o = (valid_q) ? FIFO_MEM[head_ptr_q] : '0;
 
     always_comb begin
         //combinational nets
@@ -154,11 +154,12 @@ module ucsbece154b_fifo #(
             FIFO_MEM[tail_ptr_q] <= data_i;
 
         end
-        if(pop_i && valid_q) begin
-            $display("Popping %d, head_ptr: %d.", FIFO_MEM[head_ptr_q], head_ptr_q );
-            $display("Num: %d.", data_count_q );
-            data_o <= FIFO_MEM[head_ptr_q];
-        end
+        // if(pop_i) begin
+        //     $display("Popping %d, head_ptr: %d.", FIFO_MEM[head_ptr_q], head_ptr_q );
+        //     $display("Num: %d.", data_count_q );
+        //     data_o <= FIFO_MEM[head_ptr_q];
+        // end
+        // data_o <= out;
     end
 
 
