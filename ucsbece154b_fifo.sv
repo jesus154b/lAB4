@@ -32,16 +32,15 @@ module ucsbece154b_fifo #(
     logic full_d, full_q;        // Full signal
     logic valid_d, valid_q;       // Empty signal
 
-    // logic [DATA_WIDTH-1:0] out;
 
     // Write and Read Enables internal
-    assign push_en = push_i && !full_d;
-    assign pop_en = pop_i && valid_d;
+    assign push_en = push_i && !full_q;
+    assign pop_en = pop_i && valid_q;
 
     assign valid_o = valid_q;
     assign full_o = full_q;
-    
-    assign data_o = RAM[head_ptr_d];
+
+    // assign data_o = RAM[head_ptr_q];
 
     integer i = 0;
 
@@ -54,7 +53,6 @@ module ucsbece154b_fifo #(
         data_count_d = data_count_q;
         full_d = full_q;
         valid_d = valid_q;
-        // out = 'x;
 
         // handle read port
         if(pop_en && !rst_i) begin
@@ -63,10 +61,7 @@ module ucsbece154b_fifo #(
             end
             else begin
                 head_ptr_d = head_ptr_d + 1;
-                
             end
-
-            
         end
 
         // assign write port
@@ -96,7 +91,7 @@ module ucsbece154b_fifo #(
         tail_ptr_q <= tail_ptr_d;
         full_q <= full_d;
         valid_q <= valid_d;
-        
+        data_o <= RAM[head_ptr_q];
         data_count_q <= data_count_d;
 
         // handle reset/flush/disable
@@ -109,27 +104,33 @@ module ucsbece154b_fifo #(
             for (i = 0; i < NR_ENTRIES; i++) begin
                 RAM[i] <= 0;
             end
-            // out <= 0;
         end
         else begin
-            if(pop_en) begin
-                $display("Popping, head_ptr: %d.\n", head_ptr_q );
+            if(pop_i) begin
+                $display("Popping %d, head_ptr: %d.\n", data_o, head_ptr_q );
                 $display("Num: %d.\n", data_count_q );
-                // data_o <= RAM[head_ptr_q];
 
-                full_q <= 1'b0;
+                data_o <= RAM[head_ptr_q];
 
-                if((data_count_q == 1)) begin
+                if(!push_i) begin
+                    $display("Not full.\n");
+                    full_q <= 1'b0;
+                end
+
+                if((data_count_q == 0)) begin
                     $display("Empty, head: %d, tail: %d.\n", head_ptr_q, tail_ptr_q);
                     valid_q <= 1'b0; // We are now empty
                 end
             end
                 
-            if(push_en) begin
-                $display("Pushing, tail_ptr: %d.\n", tail_ptr_q );
+            if(push_i) begin
+                $display("Pushing %d, tail_ptr: %d.\n", data_i, tail_ptr_q );
                 RAM[tail_ptr_q] <= data_i;
 
-                valid_q <= 1'b1;
+                if((data_count_q != 1)) begin
+                    $display("Valid, head: %d, tail: %d.\n", head_ptr_q, tail_ptr_q);
+                    valid_q <= 1'b1; // We are not empty
+                end
             
                 if((data_count_q == (NR_ENTRIES - 1))) begin
                     $display("Full.\n");
