@@ -139,7 +139,7 @@ module ucsbece154b_fifo #(
         full_q <= full_d;
         valid_q <= valid_d;
         data_count_q <= data_count_d;
-        out <= out;
+        out <= '0;
 
         // handle reset/flush/disable
         if(rst_i) begin
