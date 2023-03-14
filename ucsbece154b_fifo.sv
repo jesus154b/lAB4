@@ -32,6 +32,7 @@ module ucsbece154b_fifo #(
     logic full_d, full_q;        // Full signal
     logic valid_d, valid_q;       // Empty signal
 
+    logic [DATA_WIDTH-1:0] out;
 
     // Write and Read Enables internal
     assign push_en = push_i && (!full_q || (full_q && pop_i));
@@ -43,7 +44,7 @@ module ucsbece154b_fifo #(
     assign valid_o = valid_q;
     assign full_o = full_q;
 
-    // assign data_o = FIFO_MEM[head_ptr_d];
+    assign data_o = out;
 
     integer i = 0;
 
@@ -106,23 +107,10 @@ module ucsbece154b_fifo #(
             if((data_count_d == (NR_ENTRIES - 1))) begin // Push after pop, when full
                 $display("Push after pop, when full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 full_d = 1'b1;
-                // if(head_ptr_d == (NR_ENTRIES - 1) ) begin
-                //     head_ptr_d = 0;
-                // end
-                // else begin 
-                //     head_ptr_d = head_ptr_d + 1;
-                // end
             end
             if((data_count_d == (0))) begin // Push after pop, when empty
                 $display("Push after pop, when empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 valid_d = 1'b0; // We are now empty
-                
-                // if(tail_ptr_d == (NR_ENTRIES - 1) ) begin
-                //     tail_ptr_d = 0;
-                // end
-                // else begin  
-                //     tail_ptr_d = tail_ptr_d + 1;
-                // end
             end 
             else begin
                 if(head_ptr_d == (NR_ENTRIES - 1) ) begin
@@ -151,7 +139,7 @@ module ucsbece154b_fifo #(
         full_q <= full_d;
         valid_q <= valid_d;
         data_count_q <= data_count_d;
-        data_o <= data_o;
+        out <= out;
 
         // handle reset/flush/disable
         if(rst_i) begin
@@ -164,16 +152,16 @@ module ucsbece154b_fifo #(
             for (i = 0; i < NR_ENTRIES; i++) begin
                 FIFO_MEM[i] <= '0;
             end
-            data_o <= 'x;
+            // data_o <= 'x;
         end
         else begin
-            if(pop_en) begin 
+            if(pop_i && valid_q) begin 
                 $display("Popping %d, head_ptr: %d.", FIFO_MEM[head_ptr_q], head_ptr_q );
                 $display("Num: %d.", data_count_q ); 
-                data_o <= FIFO_MEM[head_ptr_q];
+                out <= FIFO_MEM[head_ptr_q];
                 
             end               
-            if(push_en) begin
+            if(push_i && (!full_q || (full_q && pop_i))) begin
                 $display("Pushing %d, tail_ptr: %d.", data_i, tail_ptr_q );
                 $display("Num: %d.", data_count_q );
                 FIFO_MEM[tail_ptr_q] <= data_i;
