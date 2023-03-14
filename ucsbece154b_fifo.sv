@@ -68,13 +68,7 @@ module ucsbece154b_fifo #(
             end
         end
         
-        // // Counter logic, if both read and write not change in amount of data
-        // if(!push_en && pop_en ) begin // There was a read
-        //     data_count_d = data_count_d - 1'b1;
-        // end
-        // else if(push_en && !pop_en) begin // There was a write
-        //     data_count_d = data_count_d + 1'b1;
-        // end
+
     end
 
     always_ff @(posedge clk_i or posedge rst_i) begin
@@ -96,6 +90,7 @@ module ucsbece154b_fifo #(
             for (i = 0; i < NR_ENTRIES; i++) begin
                 RAM[i] <= 0;
             end
+            out <= 0;
         end
         else begin
             if(pop_en) begin
