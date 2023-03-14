@@ -34,7 +34,7 @@ module ucsbece154b_fifo #(
 
 
     // Write and Read Enables internal
-    assign push_en = push_i && (!full_q || (full_d && pop_i));
+    assign push_en = push_i && (!full_q || (full_q && pop_i));
     assign pop_en = pop_i && valid_q; // || (!valid_q && push_i));
 
     // assing full = (data_count_d == (NR_ENTRIES - 1));
@@ -58,7 +58,7 @@ module ucsbece154b_fifo #(
         valid_d = valid_q;
         
         // Counter logic, if both read and write not change in amount of data
-        if( pop_en ) begin // There was a read
+        if( pop_en && !push_en) begin // There was a read
 
             if(head_ptr_d == (NR_ENTRIES - 1) ) begin
                 head_ptr_d = 0;
@@ -77,14 +77,15 @@ module ucsbece154b_fifo #(
             else begin 
                 
             end
-  
+        
         end
-        if(push_en) begin // There was a write
+        if(push_en && !pop_en) begin // There was a write
             if(tail_ptr_d == (NR_ENTRIES - 1) ) begin
                 tail_ptr_d = 0;
             end
             else begin  
                 tail_ptr_d = tail_ptr_d + 1;
+                data_count_d = data_count_d + 1'b1;
             end
 
             
@@ -95,20 +96,48 @@ module ucsbece154b_fifo #(
                 full_d = 1'b1;
             end
             else begin 
-                data_count_d = data_count_d + 1'b1;
+                
             end
         end
 
         if (push_en && pop_en) begin
-            $display("Push+pop, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+            // $display("Push+pop, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
 
-            if( (head_ptr_d == tail_ptr_d) &&(data_count_d == (NR_ENTRIES - 1))) begin // Push after pop, when full
+            if((data_count_d == (NR_ENTRIES - 1))) begin // Push after pop, when full
+                $display("Push after pop, when full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 full_d = 1'b1;
+                // if(head_ptr_d == (NR_ENTRIES - 1) ) begin
+                //     head_ptr_d = 0;
+                // end
+                // else begin 
+                //     head_ptr_d = head_ptr_d + 1;
+                // end
             end
-            if((head_ptr_d != tail_ptr_d) &&(data_count_d != (0))) begin // Push after pop, when empty
-                valid_d = 1'b1; // We are now empty
+            if((data_count_d == (0))) begin // Push after pop, when empty
+                $display("Push after pop, when empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+                valid_d = 1'b0; // We are now empty
+                
+                // if(tail_ptr_d == (NR_ENTRIES - 1) ) begin
+                //     tail_ptr_d = 0;
+                // end
+                // else begin  
+                //     tail_ptr_d = tail_ptr_d + 1;
+                // end
             end 
             else begin
+                if(head_ptr_d == (NR_ENTRIES - 1) ) begin
+                    head_ptr_d = 0;
+                end
+                else begin 
+                    head_ptr_d = head_ptr_d + 1;
+                end
+
+                if(tail_ptr_d == (NR_ENTRIES - 1) ) begin
+                    tail_ptr_d = 0;
+                end
+                else begin  
+                    tail_ptr_d = tail_ptr_d + 1;
+                end
                 data_count_d = data_count_d;
             end
         end
@@ -122,7 +151,7 @@ module ucsbece154b_fifo #(
         full_q <= full_d;
         valid_q <= valid_d;
         data_count_q <= data_count_d;
-        data_o <= FIFO_MEM[head_ptr_q];
+        // data_o <= FIFO_MEM[head_ptr_q];
 
         // handle reset/flush/disable
         if(rst_i) begin
@@ -138,9 +167,8 @@ module ucsbece154b_fifo #(
         end
         else begin
             if(pop_en) begin  
-                // data_o <= FIFO_MEM[head_ptr_q];
-                $display("Popping %d, head_ptr: %d.", data_o, head_ptr_q );
-                $display("Num: %d.", data_count_q );
+                data_o <= FIFO_MEM[head_ptr_q];
+                
             end               
             if(push_en) begin
                 $display("Pushing %d, tail_ptr: %d.", data_i, tail_ptr_q );
