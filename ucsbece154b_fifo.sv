@@ -65,9 +65,9 @@ module ucsbece154b_fifo #(
             end
             else begin 
                 head_ptr_d = head_ptr_d + 1;
-                
+                data_count_d = data_count_d - 1'b1;
             end
-          
+            
             full_d = 1'b0;
 
             if((head_ptr_d == tail_ptr_d) && (data_count_d == (0))) begin
@@ -75,7 +75,7 @@ module ucsbece154b_fifo #(
                 valid_d = 1'b0; // We are now empty
             end 
             else begin 
-                data_count_d = data_count_d - 1'b1;
+                
             end
   
         end
@@ -102,10 +102,10 @@ module ucsbece154b_fifo #(
         if (push_en && pop_en) begin
             $display("Push+pop, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
 
-            if( (data_count_d == (NR_ENTRIES - 1))) begin // Push after pop, when full
+            if( (head_ptr_d == tail_ptr_d) &&(data_count_d == (NR_ENTRIES - 1))) begin // Push after pop, when full
                 full_d = 1'b1;
             end
-            if((data_count_d != (0))) begin // Push after pop, when empty
+            if((head_ptr_d != tail_ptr_d) &&(data_count_d != (0))) begin // Push after pop, when empty
                 valid_d = 1'b1; // We are now empty
             end 
             else begin
@@ -122,7 +122,7 @@ module ucsbece154b_fifo #(
         full_q <= full_d;
         valid_q <= valid_d;
         data_count_q <= data_count_d;
-        data_o <= 'x;
+        data_o <= FIFO_MEM[head_ptr_q];
 
         // handle reset/flush/disable
         if(rst_i) begin
@@ -138,7 +138,7 @@ module ucsbece154b_fifo #(
         end
         else begin
             if(pop_en) begin  
-                data_o <= FIFO_MEM[head_ptr_q];
+                // data_o <= FIFO_MEM[head_ptr_q];
                 $display("Popping %d, head_ptr: %d.", data_o, head_ptr_q );
                 $display("Num: %d.", data_count_q );
             end               
