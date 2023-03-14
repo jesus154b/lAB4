@@ -22,73 +22,105 @@ module ucsbece154b_fifo #(
 );
 
 
-    logic [DATA_WIDTH-1:0] RAM [0:NR_ENTRIES-1];
+    logic [DATA_WIDTH-1:0] RAM [NR_ENTRIES-1:0];
 
-    logic [$clog2(NR_ENTRIES) - 1:0] head_ptr;
-    logic [$clog2(NR_ENTRIES) - 1:0] tail_ptr; 
-    logic [$clog2(NR_ENTRIES) - 1:0] data_count; 
+    logic [$clog2(NR_ENTRIES) - 1:0] head_ptr_d, head_ptr_q;
+    logic [$clog2(NR_ENTRIES) - 1:0] tail_ptr_d, tail_ptr_q; 
+    logic [$clog2(NR_ENTRIES):0] data_count_d, data_count_q; 
 
     logic push_en;        // Write Enable signal generated iff FIFO is not full
-    logic pop_en;        // Read Enable signal generated iff FIFO is not empty
-    logic fifo_full;        // Full signal
-    logic fifo_empty;       // Empty signal
+    logic full_d, full_q;        // Full signal
+    logic valid_d, valid_q;       // Empty signal
 
-    always_ff @( posedge clk_i or negedge rst_i ) begin : q_Block
-        if(!rst_i) begin
-            RAM <= '{default: '0};
-            head_ptr <= 0;
-            tail_ptr <= 0;
-            data_count <= 0;
+    logic [DATA_WIDTH-1:0] out;
+
+    // Write and Read Enables internal
+    assign push_en = push_i && !full_d;
+    assign pop_en = pop_i && valid_d;
+
+    assign valid_o = valid_q;
+    assign full_o = full_q;
+    assign data_o = out;
+
+    integer i = 0;
+
+    always_comb begin
+        //combinational nets
+
+        // registers
+        head_ptr_d = head_ptr_q;
+        tail_ptr_d = tail_ptr_q;
+        data_count_d = data_count_q;
+        full_d = full_q;
+        valid_d = valid_q;
+
+        // handle read port
+        if(pop_en && !rst_i) begin
+            if(head_ptr_d == (NR_ENTRIES - 1) ) begin
+                head_ptr_d = 0;
+            end
         end
-        else begin
 
-            // Pop Logic
-            if(pop_en) begin
-                data_o <= RAM[head_ptr];
-
-                if(head_ptr == (NR_ENTRIES - 1)) begin
-                    head_ptr <= 0;
-                end
-                else begin
-                    head_ptr <= head_ptr + 1;
-                end
+        // assign write port
+        if(push_en && !rst_i) begin
+            if(tail_ptr_d == (NR_ENTRIES - 1) ) begin
+                tail_ptr_d = 0;
             end
-
-            // Push Logic
-            if(push_en) begin
-                RAM[tail_ptr] <= data_i;
-
-                if(tail_ptr == (NR_ENTRIES - 1)) begin
-                    tail_ptr <= 0;
-                end
-                else begin
-                    tail_ptr <= tail_ptr + 1;
-                end
-            end
-
-            // Counter logic, if both read and write not change in amount of data
-            if(push_en && !pop_en) begin // There was a write
-                data_count <= data_count + 1;
-            end
-            else if(!push_en && pop_en) begin // There was a read
-                data_count <= data_count - 1;
-            end
-            
+        end
+        
+        // Counter logic, if both read and write not change in amount of data
+        if(!push_en && pop_en ) begin // There was a read
+            data_count_d = data_count_d - 1'b1;
+        end
+        else if(push_en && !pop_en) begin // There was a write
+            data_count_d = data_count_d + 1'b1;
         end
     end
 
-    // Write and Read Enables internal
-    assign push_en = push_i & !fifo_full;  
-    assign pop_en = pop_i & !fifo_empty;
+    always_ff @(posedge clk_i or posedge rst_i) begin
 
-    // Full and Empty to output
-    assign full_o = fifo_full;
-    assign valid_o  = fifo_empty;
-    
-    // Full and Empty internal
-    assign fifo_full = (data_count == NR_ENTRIES) ? 1'b1 : 0;
-    assign fifo_empty = (data_count == 0) ? 1'b1 : 0;
+        head_ptr_q <= head_ptr_d;
+        tail_ptr_q <= tail_ptr_d;
+        full_q <= full_d;
+        valid_q <= valid_d;
 
-    
+        data_count_q <= data_count_d;
+
+        // handle reset/flush/disable
+        if(rst_i) begin
+            head_ptr_q <= 0;
+            tail_ptr_q <= 0;
+            data_count_q <= 0;
+            full_q <= 0;
+            valid_q <= 0;
+            for (i = 0; i < NR_ENTRIES; i++) begin
+                RAM[i] <= 0;
+            end
+        end
+        else begin
+            if(pop_en) begin
+                out <= RAM[head_ptr_q];
+                head_ptr_q <= head_ptr_q + 1;
+                if(tail_ptr_q == head_ptr_q) begin
+                    // $display("Empty.\n");
+                    valid_q <= 1'b0; // We are now empty
+                end
+            end
+                
+            if(push_en) begin
+                // $display("Pushing, tail_ptr: %d.\n", tail_ptr_q );
+                RAM[tail_ptr_q] <= data_i;
+                tail_ptr_q <= tail_ptr_q + 1;
+                valid_q <= 1'b1;
+                if(tail_ptr_q == (NR_ENTRIES - 1)) begin
+                    // $display("Full.\n");
+                   full_q <= 1'b1;
+                end
+            end
+        end
+
+
+    end
+
 
 endmodule
