@@ -154,7 +154,7 @@ module ucsbece154b_fifo #(
     end
 
     always_ff @(posedge clk_i) begin
-        if(push_i && (!full_q || (full_q && pop_i))) begin
+        if(push_i) begin
             $display("Pushing %d, tail_ptr: %d.", data_i, tail_ptr_q );
             $display("Num: %d.", data_count_q );
             FIFO_MEM[tail_ptr_q] <= data_i;
