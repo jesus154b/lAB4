@@ -62,19 +62,14 @@ module ucsbece154b_fifo #(
             if(head_ptr_d == (NR_ENTRIES - 1) ) begin
                 head_ptr_d = 0;
             end
-            else begin
-                full_d = 1'b0;
+            else begin 
                 head_ptr_d = head_ptr_d + 1;
+            end
+            full_d = 1'b0;
+            
 
-                // if((data_count_d == (NR_ENTRIES-1))) begin
-                //     // $display("Valid, head: %d, tail: %d.\n", head_ptr_d, tail_ptr_d);
-                //     full_d = 1'b1; // We are not empty
-                // end
-
-                if((head_ptr_d == tail_ptr_d)) begin
-                    $display("Empty, head: %d, tail: %d.\n", head_ptr_d, tail_ptr_d);
-                    valid_d = 1'b0; // We are now empty
-                end
+            if((data_count_d == (0))) begin
+                valid_d = 1'b0; // We are now empty
             end
         end
 
@@ -83,45 +78,47 @@ module ucsbece154b_fifo #(
             if(tail_ptr_d == (NR_ENTRIES - 1) ) begin
                 tail_ptr_d = 0;
             end
-            else begin
-                valid_d = 1'b1;
+            else begin 
                 tail_ptr_d = tail_ptr_d + 1;
+            end
 
-
-                // if((data_count_d != 0)) begin
-                //     // $display("Valid, head: %d, tail: %d.\n", head_ptr_d, tail_ptr_d);
-                //     valid_d = 1'b1; // We are not empty
-                // end
+            valid_d = 1'b1;
             
-                if((data_count_d == (NR_ENTRIES - 1))) begin
-                    $display("Full.\n");
-                    full_d = 1'b1;
-                end
-            end 
+        
+            if((data_count_d == (NR_ENTRIES - 1))) begin
+                full_d = 1'b1;
+            end
+
 
         end
         
         // Counter logic, if both read and write not change in amount of data
         if(!push_en && pop_en ) begin // There was a read
-            if((head_ptr_d == tail_ptr_d)) begin
+            if((head_ptr_d == tail_ptr_d) && (data_count_d == (0))) begin
                 $display("Empty, head: %d, tail: %d.\n", head_ptr_d, tail_ptr_d);
                 valid_d = 1'b0; // We are now empty
             end 
-            data_count_d = data_count_d - 1'b1;      
+            else begin
+                data_count_d = data_count_d - 1'b1; 
+            end     
         end
         if(push_en && !pop_en) begin // There was a write
             if((head_ptr_d == tail_ptr_d) && (data_count_d == (NR_ENTRIES - 1))) begin
                 $display("Full, head: %d, tail: %d.\n", head_ptr_d, tail_ptr_d);
                 full_d = 1'b1;
             end
-            data_count_d = data_count_d + 1'b1;    
+            else begin
+                data_count_d = data_count_d + 1'b1;  
+            end  
         end  
         if (push_en && pop_en) begin
             $display("Push+pop, head: %d, tail: %d.\n", head_ptr_d, tail_ptr_d);
-            if((head_ptr_d == tail_ptr_d)) begin // Push after pop
+            if((head_ptr_d == tail_ptr_d) && (data_count_d == (NR_ENTRIES - 1))) begin // Push after pop
                 full_d = 1'b1;
             end
-            data_count_d = data_count_d;
+            else begin
+                data_count_d = data_count_d;
+            end
         end
 
     end
@@ -155,6 +152,7 @@ module ucsbece154b_fifo #(
                 
             if(push_en) begin
                 $display("Pushing %d, tail_ptr: %d.\n", data_i, tail_ptr_q );
+                $display("Num: %d.\n", data_count_q );
                 RAM[tail_ptr_q] <= data_i;
 
             end
