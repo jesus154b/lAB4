@@ -105,10 +105,10 @@ module ucsbece154b_fifo #(
             if((head_ptr_d == tail_ptr_d) && (data_count_d == (NR_ENTRIES - 1))) begin // Push after pop
                 full_d = 1'b1;
             end
-            if((head_ptr_d == tail_ptr_d) && (data_count_d == (0))) begin
-                $display("Empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
-                valid_d = 1'b0; // We are now empty
-            end 
+            // if((head_ptr_d == tail_ptr_d) && (data_count_d == (0))) begin
+            //     $display("Empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+            //     valid_d = 1'b0; // We are now empty
+            // end 
             else begin
                 data_count_d = data_count_d;
             end
@@ -133,7 +133,7 @@ module ucsbece154b_fifo #(
             full_q <= 0;
             valid_q <= 0;
             for (i = 0; i < NR_ENTRIES; i++) begin
-                FIFO_MEM[i] <= 0;
+                FIFO_MEM[i] <= '0;
             end
             data_o <= 'x;
         end
