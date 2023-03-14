@@ -129,7 +129,7 @@ module ucsbece154b_fifo #(
         tail_ptr_q <= tail_ptr_d;
         full_q <= full_d;
         valid_q <= valid_d;
-        data_o <= RAM[head_ptr_q];
+        data_o <= RAM[head_ptr_d];
         data_count_q <= data_count_d;
 
         // handle reset/flush/disable
