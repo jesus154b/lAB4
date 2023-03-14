@@ -31,7 +31,7 @@ module ucsbece154b_fifo #(
     logic push_en, pop_en;        // Write Enable signal generated iff FIFO is not full
     logic full_d, full_q;        // Full signal
     logic valid_d, valid_q;       // Empty signal
-    logic [DATA_WIDTH-1:0] out;
+    // logic [DATA_WIDTH-1:0] out;
 
     // Write and Read Enables internal
     assign push_en = push_i && (!full_q || (full_q && pop_i));
