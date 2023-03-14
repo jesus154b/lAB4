@@ -21,12 +21,13 @@ module ucsbece154b_fifo #(
     output  logic                   valid_o
 );
 
+    // integer i;
 
-    logic [DATA_WIDTH-1:0] FIFO_MEM [NR_ENTRIES-1:0];
+    logic [DATA_WIDTH-1:0] MEM [NR_ENTRIES];
 
     logic [$clog2(NR_ENTRIES) - 1:0] head_ptr_d, head_ptr_q;
     logic [$clog2(NR_ENTRIES) - 1:0] tail_ptr_d, tail_ptr_q; 
-    logic [$clog2(NR_ENTRIES) :0] data_count_d, data_count_q; 
+    logic [$clog2(NR_ENTRIES)    :0] data_count_d, data_count_q; 
 
     logic push_en, pop_en;        // Write Enable signal generated iff FIFO is not full
     logic full_d, full_q;        // Full signal
@@ -34,13 +35,16 @@ module ucsbece154b_fifo #(
     // logic [DATA_WIDTH-1:0] out;
 
     // Write and Read Enables internal
-    assign push_en = push_i && (!full_q || (full_q && pop_i));
-    assign pop_en = pop_i && valid_q; // || (!valid_q && push_i));
+    assign push_en = ( push_i && (!full_q || (full_q && pop_i))) ? 1'b1 : 1'b0;
+    assign pop_en = (pop_i && valid_q) ? 1'b1 : 1'b0; // || (!valid_q && push_i));
 
     assign valid_o = valid_q;
     assign full_o = full_q;
 
-    // assign data_o = out;
+    // assign data_o = MEM[head_ptr_q];
+
+    // $display("Data_o, head_ptr: %d, tail: %d.", data_o, head_ptr_q);
+    assign data_o = (valid_q) ? MEM[head_ptr_q] : '0;
 
     always_comb begin
         //combinational nets
@@ -53,20 +57,23 @@ module ucsbece154b_fifo #(
         valid_d = valid_q;
         
         // Counter logic, if both read and write not change in amount of data
-        if( pop_en && !push_en) begin // There was a read
+        if( pop_en) begin // There was a read
 
-            if(head_ptr_d == (NR_ENTRIES - 1) ) begin
+            if(head_ptr_d >= (NR_ENTRIES - 1)  ) begin
+                $display("Head restart");
                 head_ptr_d = 0;
             end
             else begin 
                 head_ptr_d = head_ptr_d + 1;
-                data_count_d = data_count_d - 1'b1;
+                if(!push_en) begin
+                    data_count_d = data_count_d - 1'b1;
+                end
             end
             
             full_d = 1'b0;
 
-            if((head_ptr_d == tail_ptr_d) && (data_count_d == (0))) begin
-                // $display("Empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+            if( !(head_ptr_d - tail_ptr_d) &&(data_count_d == (0))) begin
+                $display("Empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 valid_d = 1'b0; // We are now empty
             end 
             else begin 
@@ -74,19 +81,22 @@ module ucsbece154b_fifo #(
             end
         
         end
-        if(push_en && !pop_en) begin // There was a write
-            if(tail_ptr_d == (NR_ENTRIES - 1) ) begin
+        if(push_en) begin // There was a write
+            if(tail_ptr_d >= (NR_ENTRIES - 1)  ) begin
+                $display("Tail restart");
                 tail_ptr_d = 0;
             end
             else begin  
                 tail_ptr_d = tail_ptr_d + 1;
-                data_count_d = data_count_d + 1'b1;
+                if(!pop_en) begin
+                    data_count_d = data_count_d + 1'b1;
+                end
             end
             
             valid_d = 1'b1;
 
-            if((head_ptr_d == tail_ptr_d) && (data_count_d == (NR_ENTRIES-1))) begin
-                // $display("Full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+            if(!(head_ptr_d - tail_ptr_d) && (data_count_d >= (NR_ENTRIES - 1))) begin
+                $display("Full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 full_d = 1'b1;
             end
             else begin 
@@ -94,31 +104,33 @@ module ucsbece154b_fifo #(
             end
         end
 
-        if (push_en && pop_en) begin
+        else if (push_en && pop_en) begin
             // $display("Push+pop, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
 
-            if((head_ptr_d == tail_ptr_d) && (data_count_d == (NR_ENTRIES-1 ))) begin // Push after pop, when full
-                // $display("Push after pop, when full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+            if( !(head_ptr_d - tail_ptr_d) &&(data_count_d >= (NR_ENTRIES - 1))) begin // Push after pop, when full
+                $display("Push after pop, when full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 full_d = 1'b1;
             end
-            if((head_ptr_d == tail_ptr_d) &&(data_count_d == (0))) begin // Push after pop, when empty
-                // $display("Push after pop, when empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+            else if( !(head_ptr_d - tail_ptr_d) &&(data_count_d == (0))) begin // Push after pop, when empty
+                $display("Push after pop, when empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 valid_d = 1'b0; // We are now empty
             end 
             else begin
-                if(head_ptr_d == (NR_ENTRIES - 1) ) begin
-                    head_ptr_d = 0;
-                end
-                else begin 
-                    head_ptr_d = head_ptr_d + 1;
-                end
+                $display("Push after pop, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
 
-                if(tail_ptr_d == (NR_ENTRIES - 1) ) begin
-                    tail_ptr_d = 0;
-                end
-                else begin  
-                    tail_ptr_d = tail_ptr_d + 1;
-                end
+                // if(head_ptr_d == (NR_ENTRIES - 1) ) begin
+                //     head_ptr_d = 0;
+                // end
+                // else begin 
+                //     head_ptr_d = head_ptr_d + 1;
+                // end
+
+                // if(tail_ptr_d == (NR_ENTRIES - 1) ) begin
+                //     tail_ptr_d = 0;
+                // end
+                // else begin  
+                //     tail_ptr_d = tail_ptr_d + 1;
+                // end
 
                 data_count_d = data_count_d;
             end
@@ -126,7 +138,7 @@ module ucsbece154b_fifo #(
 
     end
 
-    always_ff @(posedge clk_i or posedge rst_i) begin
+    always_ff @(posedge clk_i ) begin
 
         head_ptr_q <= head_ptr_d;
         tail_ptr_q <= tail_ptr_d;
@@ -136,28 +148,21 @@ module ucsbece154b_fifo #(
 
         // handle reset/flush/disable
         if(rst_i) begin
-            head_ptr_q <= 0;
-            tail_ptr_q <= 0;
-            data_count_q <= 0;
-
-            full_q <= 0;
-            valid_q <= 0;
+            head_ptr_q <= '0;
+            tail_ptr_q <= '0;
+            data_count_q <= '0;
+            full_q <= '0;
+            valid_q <= '0;
         end
-
-
     end
 
-    always_ff @(posedge clk_i) begin
-        if(push_i && (!full_q || (full_q && pop_i))) begin
+    
+   
+    always_ff @(posedge clk_i) begin : mem_write
+        if( push_i && (!full_q || pop_i)) begin // && (!full_q || (full_q && pop_i))
             $display("Pushing %d, tail_ptr: %d.", data_i, tail_ptr_q );
             $display("Num: %d.", data_count_q );
-            FIFO_MEM[tail_ptr_q] <= data_i;
-
-        end
-        if(pop_i && valid_q) begin
-            $display("Popping %d, head_ptr: %d.", FIFO_MEM[head_ptr_q], head_ptr_q );
-            $display("Num: %d.", data_count_q );
-            data_o <= FIFO_MEM[head_ptr_q];
+            MEM[tail_ptr_q] <= data_i;
         end
     end
 
