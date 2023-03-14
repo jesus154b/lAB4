@@ -43,7 +43,7 @@ module ucsbece154b_fifo #(
     assign valid_o = valid_q;
     assign full_o = full_q;
 
-    assign data_o = FIFO_MEM[head_ptr_q];
+    // assign data_o = FIFO_MEM[head_ptr_d];
 
     integer i = 0;
 
@@ -122,7 +122,6 @@ module ucsbece154b_fifo #(
         tail_ptr_q <= tail_ptr_d;
         full_q <= full_d;
         valid_q <= valid_d;
-        // data_o <= FIFO_MEM[head_ptr_d];
         data_count_q <= data_count_d;
 
         // handle reset/flush/disable
@@ -132,14 +131,14 @@ module ucsbece154b_fifo #(
             data_count_q <= 0;
             full_q <= 0;
             valid_q <= 0;
-            for (i = 0; i < NR_ENTRIES; i++) begin
-                FIFO_MEM[i] <= 0;
-            end
-            // data_o <= 'x;
+            // for (i = 0; i < NR_ENTRIES; i++) begin
+            //     FIFO_MEM[i] <= 0;
+            // end
+            data_o <= 'x;
         end
         else begin
             if(pop_en) begin  
-                // data_o <= FIFO_MEM[head_ptr_q];
+                data_o <= FIFO_MEM[head_ptr_q];
                 $display("Popping %d, head_ptr: %d.", data_o, head_ptr_q );
                 $display("Num: %d.", data_count_q );
             end               
