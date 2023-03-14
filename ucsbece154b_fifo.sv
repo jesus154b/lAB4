@@ -66,7 +66,7 @@ module ucsbece154b_fifo #(
             full_d = 1'b0;
 
             if((head_ptr_d == tail_ptr_d) && (data_count_d == (0))) begin
-                // $display("Empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+                $display("Empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 valid_d = 1'b0; // We are now empty
             end 
             else begin 
@@ -86,7 +86,7 @@ module ucsbece154b_fifo #(
             valid_d = 1'b1;
 
             if((head_ptr_d == tail_ptr_d) && (data_count_d == (NR_ENTRIES-1))) begin
-                // $display("Full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+                $display("Full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 full_d = 1'b1;
             end
             else begin 
@@ -97,15 +97,16 @@ module ucsbece154b_fifo #(
         if (push_en && pop_en) begin
             // $display("Push+pop, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
 
-            if((data_count_d == (NR_ENTRIES-1 ))) begin // Push after pop, when full
-                // $display("Push after pop, when full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+            if((head_ptr_d == tail_ptr_d) && (data_count_d == (NR_ENTRIES-1 ))) begin // Push after pop, when full
+                $display("Push after pop, when full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 full_d = 1'b1;
             end
-            if((data_count_d == (0))) begin // Push after pop, when empty
-                // $display("Push after pop, when empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
-                valid_d = 1'b0; // We are now empty
+            if((head_ptr_d == tail_ptr_d) && (data_count_d == (0))) begin // Push after pop, when empty
+                $display("Push after pop, when empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+                valid_d = 1'b0; // We are now emptya
             end 
             else begin
+                valid_d = 1'b1; // We are not empty
                 if(head_ptr_d == (NR_ENTRIES - 1) ) begin
                     head_ptr_d = 0;
                 end
@@ -148,7 +149,7 @@ module ucsbece154b_fifo #(
     end
 
     always_ff @(posedge clk_i) begin
-        if(push_en) begin
+        if(push_i && (!full_q || (full_q && pop_i))) begin
             // $display("Pushing %d, tail_ptr: %d.", data_i, tail_ptr_q );
             // $display("Num: %d.", data_count_q );
             FIFO_MEM[tail_ptr_q] <= data_i;
