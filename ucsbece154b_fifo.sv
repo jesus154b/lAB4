@@ -31,7 +31,7 @@ module ucsbece154b_fifo #(
     logic push_en, pop_en;        // Write Enable signal generated iff FIFO is not full
     logic full_d, full_q;        // Full signal
     logic valid_d, valid_q;       // Empty signal
-    logic [DATA_WIDTH-1:0] out;
+    // logic [DATA_WIDTH-1:0] out;
 
     // Write and Read Enables internal
     assign push_en = push_i && (!full_q || (full_q && pop_i));
@@ -40,7 +40,7 @@ module ucsbece154b_fifo #(
     assign valid_o = valid_q;
     assign full_o = full_q;
 
-    assign data_o = out;
+    // assign data_o = out;
 
     always_comb begin
         //combinational nets
@@ -66,7 +66,7 @@ module ucsbece154b_fifo #(
             full_d = 1'b0;
 
             if((head_ptr_d == tail_ptr_d) && (data_count_d == (0))) begin
-                $display("Empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+                // $display("Empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 valid_d = 1'b0; // We are now empty
             end 
             else begin 
@@ -86,7 +86,7 @@ module ucsbece154b_fifo #(
             valid_d = 1'b1;
 
             if((head_ptr_d == tail_ptr_d) && (data_count_d == (NR_ENTRIES-1))) begin
-                $display("Full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+                // $display("Full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 full_d = 1'b1;
             end
             else begin 
@@ -98,15 +98,14 @@ module ucsbece154b_fifo #(
             // $display("Push+pop, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
 
             if((head_ptr_d == tail_ptr_d) && (data_count_d == (NR_ENTRIES-1 ))) begin // Push after pop, when full
-                $display("Push after pop, when full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+                // $display("Push after pop, when full, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
                 full_d = 1'b1;
             end
-            if((head_ptr_d == tail_ptr_d) && (data_count_d == (0))) begin // Push after pop, when empty
-                $display("Push after pop, when empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
-                valid_d = 1'b0; // We are now emptya
+            if((head_ptr_d == tail_ptr_d) &&(data_count_d == (0))) begin // Push after pop, when empty
+                // $display("Push after pop, when empty, head: %d, tail: %d.", head_ptr_d, tail_ptr_d);
+                valid_d = 1'b0; // We are now empty
             end 
             else begin
-                valid_d = 1'b1; // We are not empty
                 if(head_ptr_d == (NR_ENTRIES - 1) ) begin
                     head_ptr_d = 0;
                 end
@@ -156,7 +155,7 @@ module ucsbece154b_fifo #(
 
         end
 
-        out <= FIFO_MEM[head_ptr_q];
+        data_o <= FIFO_MEM[head_ptr_q];
     end
 
 
