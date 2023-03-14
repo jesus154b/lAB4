@@ -129,7 +129,7 @@ module ucsbece154b_fifo #(
         tail_ptr_q <= tail_ptr_d;
         full_q <= full_d;
         valid_q <= valid_d;
-        data_o <= RAM[head_ptr_d];
+        data_o <= 'x;
         data_count_q <= data_count_d;
 
         // handle reset/flush/disable
@@ -142,6 +142,7 @@ module ucsbece154b_fifo #(
             for (i = 0; i < NR_ENTRIES; i++) begin
                 RAM[i] <= 0;
             end
+            data_o <= 'x;
         end
         else begin
             if(pop_en) begin
