@@ -68,7 +68,7 @@ module ucsbece154b_fifo #(
             full_d = 1'b0;
             
 
-            if((data_count_d == (0))) begin
+            if((head_ptr_d == tail_ptr_d) &&(data_count_d == (0))) begin
                 valid_d = 1'b0; // We are now empty
             end
         end
@@ -85,7 +85,7 @@ module ucsbece154b_fifo #(
             valid_d = 1'b1;
             
         
-            if((data_count_d == (NR_ENTRIES - 1))) begin
+            if((head_ptr_d == tail_ptr_d) &&(data_count_d == (NR_ENTRIES - 1))) begin
                 full_d = 1'b1;
             end
 
