@@ -26,9 +26,9 @@ module ucsbece154b_fifo #(
 
     logic [$clog2(NR_ENTRIES) - 1:0] head_ptr_d, head_ptr_q;
     logic [$clog2(NR_ENTRIES) - 1:0] tail_ptr_d, tail_ptr_q; 
-    logic [$clog2(NR_ENTRIES):0] data_count_d, data_count_q; 
+    // logic [$clog2(NR_ENTRIES):0] data_count_d, data_count_q; 
 
-    logic push_en;        // Write Enable signal generated iff FIFO is not full
+    logic push_en, pop_en;        // Write Enable signal generated iff FIFO is not full
     logic full_d, full_q;        // Full signal
     logic valid_d, valid_q;       // Empty signal
 
@@ -50,7 +50,7 @@ module ucsbece154b_fifo #(
         // registers
         head_ptr_d = head_ptr_q;
         tail_ptr_d = tail_ptr_q;
-        data_count_d = data_count_q;
+        // data_count_d = data_count_q;
         full_d = full_q;
         valid_d = valid_q;
 
@@ -68,13 +68,13 @@ module ucsbece154b_fifo #(
             end
         end
         
-        // Counter logic, if both read and write not change in amount of data
-        if(!push_en && pop_en ) begin // There was a read
-            data_count_d = data_count_d - 1'b1;
-        end
-        else if(push_en && !pop_en) begin // There was a write
-            data_count_d = data_count_d + 1'b1;
-        end
+        // // Counter logic, if both read and write not change in amount of data
+        // if(!push_en && pop_en ) begin // There was a read
+        //     data_count_d = data_count_d - 1'b1;
+        // end
+        // else if(push_en && !pop_en) begin // There was a write
+        //     data_count_d = data_count_d + 1'b1;
+        // end
     end
 
     always_ff @(posedge clk_i or posedge rst_i) begin
@@ -84,13 +84,13 @@ module ucsbece154b_fifo #(
         full_q <= full_d;
         valid_q <= valid_d;
 
-        data_count_q <= data_count_d;
+        // data_count_q <= data_count_d;
 
         // handle reset/flush/disable
         if(rst_i) begin
             head_ptr_q <= 0;
             tail_ptr_q <= 0;
-            data_count_q <= 0;
+            // data_count_q <= 0;
             full_q <= 0;
             valid_q <= 0;
             for (i = 0; i < NR_ENTRIES; i++) begin
