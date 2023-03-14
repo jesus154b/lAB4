@@ -101,6 +101,7 @@ module ucsbece154b_fifo #(
             if(pop_en) begin
                 out <= RAM[head_ptr_q];
                 head_ptr_q <= head_ptr_q + 1;
+                full_q <= 1'b0;
                 if(tail_ptr_q == head_ptr_q) begin
                     // $display("Empty.\n");
                     valid_q <= 1'b0; // We are now empty
