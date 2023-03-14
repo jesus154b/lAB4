@@ -41,7 +41,7 @@ module ucsbece154b_fifo #(
     assign valid_o = valid_q;
     assign full_o = full_q;
     
-    assign data_o = RAM[head_ptr_q];
+    assign data_o = RAM[head_ptr_d];
 
     integer i = 0;
 
