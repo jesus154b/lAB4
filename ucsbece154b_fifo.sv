@@ -144,14 +144,15 @@ module ucsbece154b_fifo #(
 
     end
 
-    assign data_o = (valid_q) ? MEM[head_ptr_q] : '0;
+    // assign data_o = (valid_q) ? MEM[head_ptr_q] : '0;
+    assign data_o = MEM[head_ptr_q];
+
 
     always_ff @(posedge clk_i) begin : mem_write
         if(push_en) begin // && (!full_q || (full_q && pop_i))
             $display("Pushing %d, tail_ptr: %d.", data_i, tail_ptr_q );
             $display("Num: %d.", data_count_q );
             MEM[tail_ptr_q] <= data_i;
-
         end
     end
 
