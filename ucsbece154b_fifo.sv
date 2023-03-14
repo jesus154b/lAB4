@@ -31,6 +31,7 @@ module ucsbece154b_fifo #(
     logic push_en, pop_en;        // Write Enable signal generated iff FIFO is not full
     logic full_d, full_q;        // Full signal
     logic valid_d, valid_q;       // Empty signal
+    logic [DATA_WIDTH-1:0] out;
 
     // Write and Read Enables internal
     assign push_en = push_i && (!full_q || (full_q && pop_i));
@@ -39,7 +40,7 @@ module ucsbece154b_fifo #(
     assign valid_o = valid_q;
     assign full_o = full_q;
 
-    // assign data_o = FIFO_MEM[head_ptr_q];
+    assign data_o = out;
 
     always_comb begin
         //combinational nets
@@ -154,7 +155,7 @@ module ucsbece154b_fifo #(
 
         end
 
-        data_o <= FIFO_MEM[head_ptr_q];
+        out <= FIFO_MEM[head_ptr_q];
     end
 
 
